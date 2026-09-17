@@ -6,6 +6,8 @@ const IDLE_MIN_MS = 20_000
 const IDLE_MAX_MS = 60_000
 const SPEED_PX_PER_SECOND = 100
 const FRAME_MS = 180
+const INTERRUPTION_MIN_MS = 10_000
+const INTERRUPTION_MAX_MS = 15_000
 
 const sprites = (name) => `../sprites/${name}.png`
 const frames = {
@@ -23,6 +25,7 @@ let x = 0
 let animationFrame
 let frameTimer
 let idleTimer
+let standTimer
 
 function setSprite(name) {
   sprite.src = sprites(name)
@@ -51,6 +54,10 @@ function randomIdleDelay() {
   return IDLE_MIN_MS + Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS)
 }
 
+function randomStandDelay() {
+  return INTERRUPTION_MIN_MS + Math.random() * (INTERRUPTION_MAX_MS - INTERRUPTION_MIN_MS)
+}
+
 function scheduleAutomaticRun() {
   clearTimeout(idleTimer)
   if (state !== 'sleeping' || !taskbar?.visible) return
@@ -63,6 +70,7 @@ function updateTaskbar(next) {
 
   if (!next.visible || !next.supported) {
     clearTimeout(idleTimer)
+    clearTimeout(standTimer)
     cancelAnimationFrame(animationFrame)
     stopAnimation()
     state = 'hidden'
@@ -97,26 +105,56 @@ function beginRun(fromClick) {
   setTimeout(() => {
     if (state !== 'waking' || !taskbar?.visible) return
     direction = x <= taskbar.x ? 'right' : 'left'
-    state = 'running'
-    animate(frames[direction])
-    const destination = direction === 'right'
-      ? taskbar.x + taskbar.width - CAT_SIZE
-      : taskbar.x
-    const start = performance.now()
-    const startX = x
-    const distance = Math.abs(destination - startX)
-    const duration = Math.max(250, (distance / SPEED_PX_PER_SECOND) * 1000)
-
-    const move = (now) => {
-      if (state !== 'running' || !taskbar?.visible) return
-      const progress = Math.min(1, (now - start) / duration)
-      x = startX + (destination - startX) * progress
-      setNativePosition()
-      if (progress < 1) animationFrame = requestAnimationFrame(move)
-      else finishRun()
-    }
-    animationFrame = requestAnimationFrame(move)
+    runForward()
   }, 720)
+}
+
+function runForward() {
+  if (!taskbar?.visible || !taskbar.supported) return
+
+  state = 'running'
+  animate(frames[direction])
+  const destination = direction === 'right'
+    ? taskbar.x + taskbar.width - CAT_SIZE
+    : taskbar.x
+  const start = performance.now()
+  const startX = x
+  const distance = Math.abs(destination - startX)
+  const duration = Math.max(250, (distance / SPEED_PX_PER_SECOND) * 1000)
+
+  const move = (now) => {
+    if (state !== 'running' || !taskbar?.visible) return
+    const progress = Math.min(1, (now - start) / duration)
+    x = startX + (destination - startX) * progress
+    setNativePosition()
+    if (progress < 1) animationFrame = requestAnimationFrame(move)
+    else finishRun()
+  }
+  animationFrame = requestAnimationFrame(move)
+}
+
+function interruptRun() {
+  if (state !== 'running') return
+
+  cancelAnimationFrame(animationFrame)
+  stopAnimation()
+  clearTimeout(standTimer)
+  state = 'standing'
+  setSprite('awake')
+
+  standTimer = setTimeout(() => {
+    if (state !== 'standing' || !taskbar?.visible) return
+
+    if (Math.random() < 0.8) {
+      state = 'sleeping'
+      animate(frames.sleep)
+      scheduleAutomaticRun()
+      return
+    }
+
+    // The 20% outcome continues in the direction the cat was already facing.
+    runForward()
+  }, randomStandDelay())
 }
 
 function finishRun() {
@@ -131,5 +169,8 @@ function finishRun() {
   }, 900)
 }
 
-cat.addEventListener('click', () => beginRun(true))
+cat.addEventListener('click', () => {
+  if (state === 'running') interruptRun()
+  else beginRun(true)
+})
 window.neko.onTaskbarState(updateTaskbar)
