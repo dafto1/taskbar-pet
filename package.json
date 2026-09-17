@@ -1,0 +1,31 @@
+{
+  "name": "neko-taskbar-pet",
+  "version": "1.0.0",
+  "description": "A tiny Neko cat that runs across the Windows taskbar.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.taskbarpet.neko",
+    "productName": "Neko Taskbar Pet",
+    "files": [
+      "src/**/*",
+      "sprites/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "Neko-Taskbar-Pet-Setup-${version}.${ext}"
+    }
+  }
+}

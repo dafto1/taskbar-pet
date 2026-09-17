@@ -1,0 +1,26 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+#cat {
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+#sprite {
+  display: block;
+  width: 32px;
+  height: 32px;
+  image-rendering: pixelated;
+  user-select: none;
+  pointer-events: none;
+}
