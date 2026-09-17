@@ -2,6 +2,9 @@ const { app, BrowserWindow, screen, ipcMain, Tray, Menu, nativeImage } = require
 const path = require('node:path')
 
 const CAT_SIZE = 40
+// Running sprites have transparent pixels below the feet, and the renderer
+// has 4px of image padding. Offset the window so visible pixels meet the bar.
+const CAT_BORDER_OFFSET = 9
 const TASKBAR_POLL_MS = 500
 
 let catWindow
@@ -116,6 +119,6 @@ ipcMain.on('cat-bounds', (_event, bounds) => {
   if (!state.visible || !state.supported) return
 
   const x = Math.round(Math.max(state.x, Math.min(bounds.x, state.x + state.width - CAT_SIZE)))
-  const y = Math.round(state.y - CAT_SIZE + 2)
+  const y = Math.round(state.y - CAT_SIZE + CAT_BORDER_OFFSET)
   catWindow.setPosition(x, y, false)
 })

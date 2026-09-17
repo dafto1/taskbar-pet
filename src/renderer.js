@@ -4,7 +4,7 @@ const sprite = document.getElementById('sprite')
 const CAT_SIZE = 40
 const IDLE_MIN_MS = 20_000
 const IDLE_MAX_MS = 60_000
-const SPEED_PX_PER_SECOND = 130
+const SPEED_PX_PER_SECOND = 100
 const FRAME_MS = 180
 
 const sprites = (name) => `../sprites/${name}.png`
